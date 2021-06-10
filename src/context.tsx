@@ -9,7 +9,9 @@ type Props = {
 };
 
 const initialState: State = {
-  symbols: [],
+  userSymbols: [],
+  addSymbol: () => {},
+  removeSymbol: () => {},
 };
 
 const AppContext = createContext(initialState);
@@ -17,12 +19,12 @@ const AppContext = createContext(initialState);
 const AppProvider: React.FC<Props> = ({ children }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
 
-  const addSymbol = (symbol: StockSymbol) => {
-    dispatch({ type: 'ADD', stockSymbol: symbol });
+  const addSymbol = (stockSymbol: StockSymbol) => {
+    dispatch({ type: 'ADD', stockSymbol });
   };
 
   const removeSymbol = (symbol: string) => {
-    const symbols = state.symbols.filter((s) => s.symbol !== symbol);
+    const symbols = state.userSymbols.filter((s) => s.symbol !== symbol);
     dispatch({ type: 'REMOVE', symbols });
   };
 

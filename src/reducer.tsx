@@ -4,9 +4,9 @@ interface StockSymbol {
 }
 
 type State = {
-  symbols: StockSymbol[];
-  addSymbol?: (symbol: StockSymbol) => void;
-  removeSymbol?: (figi: string) => void;
+  userSymbols: StockSymbol[];
+  addSymbol: (stockSymbol: StockSymbol) => void;
+  removeSymbol: (symbol: string) => void;
 };
 
 type Actions =
@@ -16,9 +16,9 @@ type Actions =
 const reducer = (state: State, action: Actions) => {
   switch (action.type) {
     case 'ADD':
-      return { ...state, symbols: [...state.symbols, action.stockSymbol] };
+      return { ...state, userSymbols: [...state.userSymbols, action.stockSymbol] };
     case 'REMOVE':
-      return { ...state, symbols: action.symbols };
+      return { ...state, userSymbols: action.symbols };
     default:
       return state;
   }
