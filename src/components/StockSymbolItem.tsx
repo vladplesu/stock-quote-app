@@ -9,16 +9,21 @@ type Props = {
 };
 
 const StockSymbolItem: React.FC<Props> = ({ stockSymbol, isFavorite }) => {
-  const { addSymbol, removeSymbol } = useGlobalContext();
+  const { addSymbol, removeSymbol, selectSymbol } = useGlobalContext();
   return (
     <>
       <ListItem>
         <ListItemText primary={stockSymbol.symbol} />
       </ListItem>
       {isFavorite ? (
-        <ListItem>
-          <Button onClick={() => removeSymbol(stockSymbol.symbol)}>REMOVE</Button>
-        </ListItem>
+        <>
+          <ListItem>
+            <Button onClick={() => removeSymbol(stockSymbol.symbol)}>REMOVE</Button>
+          </ListItem>
+          <ListItem>
+            <Button onClick={() => selectSymbol(stockSymbol.symbol)}>SELECT</Button>
+          </ListItem>
+        </>
       ) : (
         <ListItem>
           <Button onClick={() => addSymbol(stockSymbol)}>ADD</Button>
