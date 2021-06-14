@@ -9,7 +9,10 @@ import { localPoint } from '@visx/event';
 import { LinearGradient } from '@visx/gradient';
 import { max, extent, bisector, min } from 'd3-array';
 import { timeFormat } from 'd3-time-format';
+import { Button } from '@material-ui/core';
 import { useGlobalContext } from '../context';
+
+import MovingAverage from './MovingAverage';
 
 const { REACT_APP_FIN_URL: URL, REACT_APP_FIN_KEY: KEY } = process.env;
 const QUOTE_URL = `${URL}/stock/candle?token=${KEY}`;
@@ -54,6 +57,7 @@ export default withTooltip<AreaProps, ToolTipData>(
     if (width < 10) return null;
 
     const [priceData, setPriceData] = useState<Stock[]>([]);
+    const [showMavg, setShowMavg] = useState(false);
     const [loading, setLoading] = useState(true);
 
     const { timePeriod } = useGlobalContext();
@@ -181,6 +185,15 @@ export default withTooltip<AreaProps, ToolTipData>(
             onMouseMove={handleTooltip}
             onMouseLeave={() => hideTooltip()}
           />
+          {showMavg && (
+            (
+            <MovingAverage
+                lineData={priceData.map((d) => ({ date: d.date, value: d.close }))}
+                timeRange={{ x: margin.left, y: innerWidth + margin.left }}
+                linearRange={{ x: innerHeight + margin.top, y: margin.top }}
+              />
+          )
+          )}
           {tooltipData && (
             <g>
               <Line
@@ -205,6 +218,7 @@ export default withTooltip<AreaProps, ToolTipData>(
             </g>
           )}
         </svg>
+        <Button onClick={() => setShowMavg(!showMavg)}>Show MA</Button>
         {tooltipData && (
           <div>
             <TooltipWithBounds key={Math.random()} top={tooltipTop - 12} left={tooltipLeft + 12}>
