@@ -3,6 +3,7 @@ import { debounce } from 'lodash';
 import { Button, ButtonGroup, Grid, InputBase, List } from '@material-ui/core';
 import StockSymbolItem from './components/StockSymbolItem'
 import PriceChart from './components/PriceChart';
+import CustomTimePeriod from './components/CustomTimePeriod';
 import { StockSymbol } from './reducer';
 import { useGlobalContext, TimePeriods } from './context';
 import './styles/theme.scss';
@@ -68,16 +69,19 @@ function App() {
           </List>
         </Grid>
         <Grid item>
-          {selectedSymbol && <PriceChart width={600} height={400}  symbol={selectedSymbol}/>}
+          {selectedSymbol && <PriceChart width={600} height={400} symbol={selectedSymbol} />}
         </Grid>
         <Grid item>
           <ButtonGroup variant="text" color="secondary">
-            {Object.values(TimePeriods).map(t => (
+            {Object.values(TimePeriods).map((t) => (
               <Button key={t} onClick={() => setTimePeriod(t)}>
                 {t}
               </Button>
             ))}
           </ButtonGroup>
+        </Grid>
+        <Grid item>
+          <CustomTimePeriod   />
         </Grid>
       </Grid>
     </div>

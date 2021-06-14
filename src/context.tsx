@@ -14,7 +14,7 @@ export enum TimePeriods {
   SixMonths = '6M',
   YTD = 'YTD',
   OneYear = '1Y',
-  FiveYears = '5y',
+  FiveYears = '5Y',
 }
 
 const getToTimestamp = () => {
@@ -43,6 +43,7 @@ const initialState: State = {
   removeSymbol: () => {},
   selectSymbol: () => {},
   setTimePeriod: () => {},
+  setCustomTimePeriod: () => {},
 };
 
 const AppContext = createContext(initialState);
@@ -63,6 +64,22 @@ const AppProvider: React.FC<Props> = ({ children }) => {
     dispatch({ type: ActionTypes.Select, stockSymbol });
   };
 
+  const setCustomTimePeriod = (from: Date, to: Date) => {
+    const fromTimestamp = Math.round(from.getTime() / 1000);
+    const toTimestamp = Math.round(to.getTime() / 1000);
+    let resolution = '30';
+    const timeFrame = (toTimestamp - fromTimestamp) / (24 * 3600) + 1;
+    if (timeFrame > 7) {
+      resolution = 'D';
+    }
+    const tp: TimeData = {
+      from: fromTimestamp,
+      to: toTimestamp,
+      resolution,
+    };
+    dispatch({ type: ActionTypes.SetTimePeriod, timePeriod: tp });
+  };
+
   const setTimePeriod = (tp: string) => {
     const toTimestamp = getToTimestamp();
     let fromTimestamp = toTimestamp - oneDay;
@@ -72,7 +89,7 @@ const AppProvider: React.FC<Props> = ({ children }) => {
         resolution = '30';
         fromTimestamp = toTimestamp - 5 * oneDay;
         break;
-      case TimePeriods.OneDay:
+      case TimePeriods.OneMonth:
         resolution = 'D';
         fromTimestamp = toTimestamp - 30 * oneDay;
         break;
@@ -103,7 +120,16 @@ const AppProvider: React.FC<Props> = ({ children }) => {
   };
 
   return (
-    <AppContext.Provider value={{ ...state, removeSymbol, addSymbol, selectSymbol, setTimePeriod }}>
+    <AppContext.Provider
+      value={{
+        ...state,
+        removeSymbol,
+        addSymbol,
+        selectSymbol,
+        setTimePeriod,
+        setCustomTimePeriod,
+      }}
+    >
       {children}
     </AppContext.Provider>
   );

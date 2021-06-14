@@ -17,6 +17,7 @@ type State = {
   removeSymbol: (symbol: string) => void;
   selectSymbol: (stockSymbol: string) => void;
   setTimePeriod: (tp: string) => void;
+  setCustomTimePeriod: (from: Date, to: Date) => void;
 };
 
 export enum ActionTypes {
