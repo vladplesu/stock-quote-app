@@ -1,6 +1,10 @@
 interface StockSymbol {
   type: string;
   symbol: string;
+  displaySymbol: string;
+  description: string;
+  currency?: string;
+  exchange?: string;
 }
 
 interface TimeData {
@@ -11,11 +15,11 @@ interface TimeData {
 
 type State = {
   userSymbols: StockSymbol[];
-  selectedSymbol: string | null;
+  selectedSymbol: StockSymbol | null | undefined;
   timePeriod: TimeData;
   addSymbol: (stockSymbol: StockSymbol) => void;
   removeSymbol: (symbol: string) => void;
-  selectSymbol: (stockSymbol: string) => void;
+  selectSymbol: (stockSymbol: StockSymbol) => void;
   setTimePeriod: (tp: string) => void;
   setCustomTimePeriod: (from: Date, to: Date) => void;
 };
@@ -30,7 +34,7 @@ export enum ActionTypes {
 type Actions =
   | { type: ActionTypes.Add; stockSymbol: StockSymbol }
   | { type: ActionTypes.Remove; symbols: StockSymbol[] }
-  | { type: ActionTypes.Select; stockSymbol: string }
+  | { type: ActionTypes.Select; stockSymbol: StockSymbol | undefined }
   | { type: ActionTypes.SetTimePeriod; timePeriod: TimeData };
 
 const reducer = (state: State, action: Actions) => {

@@ -13,6 +13,7 @@ import { Button } from '@material-ui/core';
 import { useGlobalContext } from '../context';
 
 import MovingAverage from './MovingAverage';
+import { StockSymbol } from '../reducer';
 
 const { REACT_APP_FIN_URL: URL, REACT_APP_FIN_KEY: KEY } = process.env;
 const QUOTE_URL = `${URL}/stock/candle?token=${KEY}`;
@@ -38,7 +39,7 @@ const bisectDate = bisector<Stock, Date>((d) => d.date).left;
 export type AreaProps = {
   width: number;
   height: number;
-  symbol: string;
+  symbol: StockSymbol;
   margin?: { top: number; right: number; bottom: number; left: number };
 };
 
@@ -68,7 +69,7 @@ export default withTooltip<AreaProps, ToolTipData>(
 
     useEffect(() => {
       const { resolution, from, to } = timePeriod;
-      fetch(`${QUOTE_URL}&symbol=${symbol}&resolution=${resolution}&from=${from}&to=${to}`)
+      fetch(`${QUOTE_URL}&symbol=${symbol.symbol}&resolution=${resolution}&from=${from}&to=${to}`)
         .then((res) => {
           if (!res.ok) {
             throw new Error('Could not fetch price data');

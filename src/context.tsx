@@ -17,6 +17,9 @@ export enum TimePeriods {
   FiveYears = '5Y',
 }
 
+const { REACT_APP_FIN_URL: URL, REACT_APP_FIN_KEY: KEY } = process.env;
+const PROFILE_URL = `${URL}/stock/profile2?token=${KEY}`;
+
 const getToTimestamp = () => {
   let now = new Date();
   const day = now.getDay();
@@ -32,7 +35,7 @@ const tts = getToTimestamp();
 const timePeriod: TimeData = {
   from: tts - oneDay,
   to: tts,
-  resolution: '5',
+  resolution: '30',
 };
 
 const initialState: State = {
@@ -52,7 +55,26 @@ const AppProvider: React.FC<Props> = ({ children }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
 
   const addSymbol = (stockSymbol: StockSymbol) => {
-    dispatch({ type: ActionTypes.Add, stockSymbol });
+    if (!stockSymbol.exchange) {
+      fetch(`${PROFILE_URL}&symbol=${stockSymbol.symbol}`)
+        .then((res) => {
+          if (!res.ok) {
+            throw new Error('Could not fetch data!');
+          }
+          return res.json();
+        })
+        .then((data) => {
+          dispatch({
+            type: ActionTypes.Add,
+            stockSymbol: { ...stockSymbol, exchange: data.exchange, currency: data.currency },
+          });
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    } else {
+      dispatch({ type: ActionTypes.Add, stockSymbol });
+    }
   };
 
   const removeSymbol = (symbol: string) => {
@@ -60,8 +82,9 @@ const AppProvider: React.FC<Props> = ({ children }) => {
     dispatch({ type: ActionTypes.Remove, symbols });
   };
 
-  const selectSymbol = (stockSymbol: string) => {
-    dispatch({ type: ActionTypes.Select, stockSymbol });
+  const selectSymbol = (stockSymbol: StockSymbol) => {
+    const symbol = state.userSymbols.find((s) => s.symbol === stockSymbol.symbol);
+    dispatch({ type: ActionTypes.Select, stockSymbol: symbol });
   };
 
   const setCustomTimePeriod = (from: Date, to: Date) => {
