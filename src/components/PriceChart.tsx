@@ -11,9 +11,7 @@ import { max, extent, bisector, min } from 'd3-array';
 import { timeFormat } from 'd3-time-format';
 import { Button } from '@material-ui/core';
 import { useGlobalContext } from '../context';
-
 import MovingAverage from './MovingAverage';
-import { StockSymbol } from '../reducer';
 
 const { REACT_APP_FIN_URL: URL, REACT_APP_FIN_KEY: KEY } = process.env;
 const QUOTE_URL = `${URL}/stock/candle?token=${KEY}`;
@@ -39,7 +37,6 @@ const bisectDate = bisector<Stock, Date>((d) => d.date).left;
 export type AreaProps = {
   width: number;
   height: number;
-  symbol: StockSymbol;
   margin?: { top: number; right: number; bottom: number; left: number };
 };
 
@@ -47,7 +44,6 @@ export default withTooltip<AreaProps, ToolTipData>(
   ({
     width,
     height,
-    symbol,
     margin = { top: 0, right: 0, bottom: 0, left: 0 },
     showTooltip,
     hideTooltip,
@@ -57,11 +53,13 @@ export default withTooltip<AreaProps, ToolTipData>(
   }: AreaProps & WithTooltipProvidedProps<ToolTipData>) => {
     if (width < 10) return null;
 
+    const { timePeriod, selectedSymbol } = useGlobalContext();
+
+    if (!selectedSymbol) return null;
+
     const [priceData, setPriceData] = useState<Stock[]>([]);
     const [showMavg, setShowMavg] = useState(false);
     const [loading, setLoading] = useState(true);
-
-    const { timePeriod } = useGlobalContext();
 
     // bounds
     const innerWidth = width - margin.left - margin.right;
@@ -69,7 +67,9 @@ export default withTooltip<AreaProps, ToolTipData>(
 
     useEffect(() => {
       const { resolution, from, to } = timePeriod;
-      fetch(`${QUOTE_URL}&symbol=${symbol.symbol}&resolution=${resolution}&from=${from}&to=${to}`)
+      fetch(
+        `${QUOTE_URL}&symbol=${selectedSymbol.symbol}&resolution=${resolution}&from=${from}&to=${to}`
+      )
         .then((res) => {
           if (!res.ok) {
             throw new Error('Could not fetch price data');
@@ -92,7 +92,7 @@ export default withTooltip<AreaProps, ToolTipData>(
           setPriceData(stockData);
           setLoading(false);
         });
-    }, [symbol, timePeriod]);
+    }, [selectedSymbol, timePeriod]);
 
     // scales
     const dateScale = useMemo(
@@ -187,13 +187,11 @@ export default withTooltip<AreaProps, ToolTipData>(
             onMouseLeave={() => hideTooltip()}
           />
           {showMavg && (
-            (
             <MovingAverage
-                lineData={priceData.map((d) => ({ date: d.date, value: d.close }))}
-                timeRange={{ x: margin.left, y: innerWidth + margin.left }}
-                linearRange={{ x: innerHeight + margin.top, y: margin.top }}
-              />
-          )
+              lineData={priceData.map((d) => ({ date: d.date, value: d.close }))}
+              timeRange={{ x: margin.left, y: innerWidth + margin.left }}
+              linearRange={{ x: innerHeight + margin.top, y: margin.top }}
+            />
           )}
           {tooltipData && (
             <g>

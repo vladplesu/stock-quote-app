@@ -14,6 +14,10 @@ code {
 
 .App {
   text-align: center;
+  height: 100vh;
+  .container {
+    height: 100%;
+  }
 }
 
 .App-logo {
