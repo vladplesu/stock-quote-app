@@ -1,17 +1,22 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { AreaClosed, Bar, Line } from '@visx/shape';
+import { AxisRight, AxisBottom } from '@visx/axis';
 import { curveLinear } from '@visx/curve';
-import { GridRows, GridColumns } from '@visx/grid';
-import { scaleTime, scaleLinear } from '@visx/scale';
-import { withTooltip, Tooltip, TooltipWithBounds } from '@visx/tooltip';
-import { WithTooltipProvidedProps } from '@visx/tooltip/lib/enhancers/withTooltip';
 import { localPoint } from '@visx/event';
 import { LinearGradient } from '@visx/gradient';
-import { max, extent, bisector, min } from 'd3-array';
+import { GridRows, GridColumns } from '@visx/grid';
+import { scaleTime, scaleLinear } from '@visx/scale';
+import { AreaClosed, Bar, Line, LinePath } from '@visx/shape';
+import { withTooltip, TooltipWithBounds } from '@visx/tooltip';
+import { WithTooltipProvidedProps } from '@visx/tooltip/lib/enhancers/withTooltip';
+import { max, bisector, min } from 'd3-array';
+import { format } from 'd3-format';
 import { timeFormat } from 'd3-time-format';
-import { Button } from '@material-ui/core';
-import { useGlobalContext } from '../context';
+import { first, last } from 'lodash';
+import { Button, ButtonGroup } from '@material-ui/core';
+import { makeStyles } from '@material-ui/core/styles';
+import CustomTimePeriod from './CustomTimePeriod';
 import MovingAverage from './MovingAverage';
+import { useGlobalContext, TimePeriods } from '../context';
 
 const { REACT_APP_FIN_URL: URL, REACT_APP_FIN_KEY: KEY } = process.env;
 const QUOTE_URL = `${URL}/stock/candle?token=${KEY}`;
@@ -24,10 +29,17 @@ interface Stock {
 type ToolTipData = Stock;
 
 // styles
-const accentColor = 'green';
+const useStyles = makeStyles((theme) => ({
+  maBtn: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+  },
+}));
 
 // util
 const formatDate = timeFormat('%d %b %y  %I:%M');
+const formatStockValue = format('.2f');
 
 // accessors
 const getDate = (d: Stock) => d.date;
@@ -44,7 +56,7 @@ export default withTooltip<AreaProps, ToolTipData>(
   ({
     width,
     height,
-    margin = { top: 0, right: 0, bottom: 0, left: 0 },
+    margin = { top: 10, right: 45, bottom: 30, left: 0 },
     showTooltip,
     hideTooltip,
     tooltipData,
@@ -53,13 +65,15 @@ export default withTooltip<AreaProps, ToolTipData>(
   }: AreaProps & WithTooltipProvidedProps<ToolTipData>) => {
     if (width < 10) return null;
 
-    const { timePeriod, selectedSymbol } = useGlobalContext();
+    const { timePeriod, selectedSymbol, setTimePeriod } = useGlobalContext();
 
     if (!selectedSymbol) return null;
 
     const [priceData, setPriceData] = useState<Stock[]>([]);
     const [showMavg, setShowMavg] = useState(false);
     const [loading, setLoading] = useState(true);
+
+    const classes = useStyles();
 
     // bounds
     const innerWidth = width - margin.left - margin.right;
@@ -91,7 +105,9 @@ export default withTooltip<AreaProps, ToolTipData>(
           }
           setPriceData(stockData);
           setLoading(false);
-        });
+        })
+
+        .catch((err) => console.log(err));
     }, [selectedSymbol, timePeriod]);
 
     // scales
@@ -99,7 +115,7 @@ export default withTooltip<AreaProps, ToolTipData>(
       () =>
         scaleTime({
           range: [margin.left, innerWidth + margin.left],
-          domain: extent(priceData, getDate) as [Date, Date],
+          domain: [min(priceData, getDate) || 0, max(priceData, getDate) || 0],
         }),
       [innerWidth, margin.left, priceData]
     );
@@ -115,6 +131,15 @@ export default withTooltip<AreaProps, ToolTipData>(
         }),
       [priceData, margin.top, innerHeight]
     );
+
+    const accentColor = useMemo(() => {
+      const startPrice = first(priceData)?.close || 0;
+      const endPrice = last(priceData)?.close || 0;
+      if (startPrice > endPrice) {
+        return '#ea4335';
+      }
+      return '#81c995';
+    }, [priceData]);
 
     // tooltip handler
     const handleTooltip = useCallback(
@@ -145,7 +170,13 @@ export default withTooltip<AreaProps, ToolTipData>(
       <div>
         <svg width={width} height={height}>
           <rect x={0} y={0} width={width} height={height} rx={14} fill="white" />
-          <LinearGradient id="area-gradient" from={accentColor} to={accentColor} toOpacity={0.1} />
+          <LinearGradient
+            id="area-gradient"
+            from={accentColor}
+            to={accentColor}
+            fromOpacity={0.4}
+            toOpacity={0.1}
+          />
           <GridRows
             left={margin.left}
             scale={stockValueScale}
@@ -154,6 +185,7 @@ export default withTooltip<AreaProps, ToolTipData>(
             stroke={accentColor}
             strokeOpacity={0.2}
             pointerEvents="none"
+            numTicks={6}
           />
           <GridColumns
             top={margin.top}
@@ -163,16 +195,34 @@ export default withTooltip<AreaProps, ToolTipData>(
             stroke={accentColor}
             strokeOpacity={0.2}
             pointerEvents="none"
+            numTicks={6}
           />
+          <AxisRight
+            scale={stockValueScale}
+            left={innerWidth + margin.left}
+            tickFormat={formatStockValue}
+            tickLength={4}
+            numTicks={6}
+          />
+          <AxisBottom scale={dateScale} top={height - margin.bottom} numTicks={6} />
           <AreaClosed<Stock>
             data={priceData}
             x={(d) => dateScale(getDate(d)) ?? 0}
             y={(d) => stockValueScale(getStockValue(d)) ?? 0}
             yScale={stockValueScale}
-            strokeWidth={1}
-            stroke="url(#area-gradient)"
+            strokeWidth={0}
+            stroke={accentColor}
             fill="url(#area-gradient)"
             curve={curveLinear}
+            pointerEvents="none"
+          />
+          <LinePath
+            data={priceData}
+            curve={curveLinear}
+            x={(d) => dateScale(getDate(d)) ?? 0}
+            y={(d) => stockValueScale(getStockValue(d)) ?? 0}
+            stroke={accentColor}
+            strokeWidth={1.5}
           />
           <Bar
             x={margin.left}
@@ -198,8 +248,8 @@ export default withTooltip<AreaProps, ToolTipData>(
               <Line
                 from={{ x: tooltipLeft, y: margin.top }}
                 to={{ x: tooltipLeft, y: innerHeight + margin.top }}
-                stroke="red"
-                strokeWidth={2}
+                stroke="#000"
+                strokeWidth={1}
                 pointerEvents="none"
                 strokeDasharray="5,2"
               />
@@ -217,17 +267,37 @@ export default withTooltip<AreaProps, ToolTipData>(
             </g>
           )}
         </svg>
-        <Button onClick={() => setShowMavg(!showMavg)}>Show MA</Button>
+        <Button
+          className={classes.maBtn}
+          size="small"
+          variant="outlined"
+          color="secondary"
+          onClick={() => setShowMavg(!showMavg)}
+        >
+          Show MA
+        </Button>
         {tooltipData && (
           <div>
             <TooltipWithBounds key={Math.random()} top={tooltipTop - 12} left={tooltipLeft + 12}>
               {`$${getStockValue(tooltipData)}`}
             </TooltipWithBounds>
-            <Tooltip top={innerHeight + margin.top - 14} left={tooltipLeft}>
+            <TooltipWithBounds top={innerHeight + margin.top - 14} left={tooltipLeft}>
               {formatDate(getDate(tooltipData))}
-            </Tooltip>
+            </TooltipWithBounds>
           </div>
         )}
+        <ButtonGroup color="primary" size="small">
+          {Object.values(TimePeriods).map((t) => (
+            <Button
+              key={t}
+              onClick={() => setTimePeriod(t)}
+              variant={timePeriod.resolution === t ? 'contained' : 'text'}
+            >
+              {t}
+            </Button>
+          ))}
+          <CustomTimePeriod />
+        </ButtonGroup>
       </div>
     );
   }

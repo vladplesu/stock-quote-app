@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Grid } from '@material-ui/core';
+import { Box } from '@material-ui/core';
 import ChartFragment from './containers/ChartFragment';
 import Header from './components/Header';
 import SearchFragment from './containers/SearchFragment';
@@ -10,11 +10,11 @@ function App() {
 
   return (
     <div className="App">
-      <Grid className="container" container wrap="nowrap" direction="column">
+      <Box height="100%">
         <Header handleClick={() => setShowSearch(!showSearch)} />
         {showSearch && <SearchFragment handleClick={() => setShowSearch(!showSearch)} />}
         <ChartFragment handleBtnClick={() => setShowSearch(!showSearch)} />
-      </Grid>
+      </Box>
     </div>
   );
 }
