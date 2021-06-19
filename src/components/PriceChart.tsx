@@ -8,9 +8,14 @@ import { scaleTime, scaleLinear } from '@visx/scale';
 import { AreaClosed, Bar, Line, LinePath } from '@visx/shape';
 import { withTooltip, TooltipWithBounds } from '@visx/tooltip';
 import { WithTooltipProvidedProps } from '@visx/tooltip/lib/enhancers/withTooltip';
-import { max, bisector, min } from 'd3-array';
+import { max, bisector, min, pairs } from 'd3-array';
 import { format } from 'd3-format';
 import { timeFormat } from 'd3-time-format';
+import {
+  scaleDiscontinuous,
+  discontinuitySkipWeekends,
+  discontinuityRange,
+} from '@d3fc/d3fc-discontinuous-scale';
 import { first, last } from 'lodash';
 import { Button, ButtonGroup } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
@@ -38,13 +43,29 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 // util
-const formatDate = timeFormat('%d %b %y  %I:%M');
+const formatDate = timeFormat('%d %b %y  %H:%M');
 const formatStockValue = format('.2f');
 
 // accessors
 const getDate = (d: Stock) => d.date;
 const getStockValue = (d: Stock) => d.close;
 const bisectDate = bisector<Stock, Date>((d) => d.date).left;
+const tradingHours = (dates: Date[]) => {
+  const getDateKey = (date: Date) =>
+    `${date.getUTCMonth()}-${date.getUTCDate()}-${date.getUTCFullYear()}`;
+
+  const thrs = dates.reduce((acc: { [key: string]: [Date, Date] }, curr: Date) => {
+    const dateKey = getDateKey(curr);
+    if (!Object.prototype.hasOwnProperty.call(acc, dateKey)) {
+      acc[dateKey] = [curr, curr];
+    } else {
+      acc[dateKey][1] = curr;
+    }
+    return acc;
+  }, {});
+
+  return Object.keys(thrs).map((d) => thrs[d]);
+};
 
 export type AreaProps = {
   width: number;
@@ -96,12 +117,17 @@ export default withTooltip<AreaProps, ToolTipData>(
           }
 
           const { c: closePrices, t: timeStamps } = data;
-          const stockData: Stock[] = [];
+          let stockData: Stock[] = [];
           if (closePrices && timeStamps) {
             for (let i = 0; i < closePrices.length; i++) {
               const date = new Date(timeStamps[i] * 1000);
               stockData.push({ date, close: closePrices[i] });
             }
+          }
+          if (resolution !== 'D' && resolution !== 'W')  {
+            stockData = stockData.filter(
+              (d) => d.date.getUTCHours() >= 13 && d.date.getUTCHours() < 20
+            );
           }
           setPriceData(stockData);
           setLoading(false);
@@ -110,15 +136,30 @@ export default withTooltip<AreaProps, ToolTipData>(
         .catch((err) => console.log(err));
     }, [selectedSymbol, timePeriod]);
 
+    const discontinuities = useMemo(
+      () => pairs(tradingHours(priceData.map(({ date }) => date))).map((d) => [d[0][1], d[1][0]]),
+      [priceData]
+    );
+
+
     // scales
     const dateScale = useMemo(
-      () =>
-        scaleTime({
-          range: [margin.left, innerWidth + margin.left],
-          domain: [min(priceData, getDate) || 0, max(priceData, getDate) || 0],
-        }),
-      [innerWidth, margin.left, priceData]
+      () => {
+        const { resolution } = timePeriod;
+        let discontinuityProvider = discontinuitySkipWeekends()
+        if (resolution !== 'D' && resolution !== 'W') {
+          discontinuityProvider = discontinuityRange(...discontinuities);
+        }
+        return scaleDiscontinuous(
+          scaleTime({
+            range: [margin.left, innerWidth + margin.left],
+            domain: [min(priceData, getDate) || 0, max(priceData, getDate) || 0],
+          })
+        ).discontinuityProvider(discontinuityProvider);
+      }        ,
+      [discontinuities, innerWidth, margin.left, priceData, timePeriod]
     );
+
     const stockValueScale = useMemo(
       () =>
         scaleLinear({

@@ -25,7 +25,7 @@ const getToTimestamp = () => {
   const day = now.getDay();
   if (day === 0 || day === 6) {
     const d = day === 0 ? 2 : 1;
-    now = new Date(now.getFullYear(), now.getMonth(), now.getDate() - d);
+    now = new Date(now.getFullYear(), now.getMonth(), now.getDate() - d, 23, 59);
   }
   return Math.round(now.getTime() / 1000);
 };
@@ -35,7 +35,7 @@ const tts = getToTimestamp();
 const timePeriod: TimeData = {
   from: tts - oneDay,
   to: tts,
-  resolution: '30',
+  resolution: '5',
 };
 
 const initialState: State = {
@@ -90,9 +90,12 @@ const AppProvider: React.FC<Props> = ({ children }) => {
   const setCustomTimePeriod = (from: Date, to: Date) => {
     const fromTimestamp = Math.round(from.getTime() / 1000);
     const toTimestamp = Math.round(to.getTime() / 1000);
-    let resolution = '30';
+    let resolution = '5';
     const timeFrame = (toTimestamp - fromTimestamp) / (24 * 3600) + 1;
     if (timeFrame > 7) {
+      resolution = '30';
+    }
+    if (timeFrame > 30) {
       resolution = 'D';
     }
     const tp: TimeData = {
@@ -109,11 +112,11 @@ const AppProvider: React.FC<Props> = ({ children }) => {
     let resolution = '5';
     switch (tp) {
       case TimePeriods.FiveDays:
-        resolution = '30';
+        resolution = '15';
         fromTimestamp = toTimestamp - 5 * oneDay;
         break;
       case TimePeriods.OneMonth:
-        resolution = 'D';
+        resolution = '30';
         fromTimestamp = toTimestamp - 30 * oneDay;
         break;
       case TimePeriods.SixMonths:
