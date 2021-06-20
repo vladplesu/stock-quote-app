@@ -10,14 +10,14 @@ const Header: React.FC<Props> = ({ handleClick }) => {
   const { selectedSymbol } = useGlobalContext();
 
   return (
-    <Box id="header" paddingY={1} boxShadow={1} onClick={handleClick}>
+    <Box id="header" paddingY={1} boxShadow={1} onClick={handleClick} style={{ cursor: 'pointer' }}>
       {selectedSymbol ? (
         <>
           <Typography component="h1" variant="h5" color="primary">
             {selectedSymbol.symbol}
           </Typography>
           <Typography component="h2" variant="subtitle2">
-            {selectedSymbol.exchange}
+            {selectedSymbol.exchange} | {selectedSymbol.currency}
           </Typography>
         </>
       ) : (

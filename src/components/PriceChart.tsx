@@ -323,17 +323,17 @@ export default withTooltip<AreaProps, ToolTipData>(
             </TooltipWithBounds>
           </div>
         )}
-        <ButtonGroup color="primary" size="small">
+        <ButtonGroup color="primary" size="small" style={{ width: '100%', overflow: 'auto' }}>
           {Object.values(TimePeriods).map((t) => (
             <Button
               key={t}
               onClick={() => setTimePeriod(t)}
-              variant={timePeriod.resolution === t ? 'contained' : 'text'}
+              variant={timePeriod.timePeriod === t ? 'contained' : 'text'}
             >
               {t}
             </Button>
           ))}
-          <CustomTimePeriod />
+          <CustomTimePeriod active={timePeriod.timePeriod === 'custom'} />
         </ButtonGroup>
       </div>
     );

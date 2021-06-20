@@ -20,6 +20,7 @@ interface TimeData {
   from: number;
   to: number;
   resolution: string;
+  timePeriod: string;
 }
 
 type State = {

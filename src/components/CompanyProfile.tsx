@@ -18,7 +18,7 @@ const CompanyProfile = () => {
     const { companyProfile } = selectedSymbol;
 
     return (
-      <Box paddingTop={2} textAlign="left">
+      <Box paddingTop={2} paddingBottom={2} textAlign="left">
         <Box display="flex" alignItems="center" marginBottom={1}>
           <Avatar src={companyProfile?.logo} />
           <Box display="flex" flexDirection="column" paddingLeft={2}>

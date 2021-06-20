@@ -36,6 +36,7 @@ const timePeriod: TimeData = {
   from: tts - oneDay,
   to: tts,
   resolution: '5',
+  timePeriod: TimePeriods.OneDay,
 };
 
 const initialState: State = {
@@ -117,6 +118,7 @@ const AppProvider: React.FC<Props> = ({ children }) => {
       from: fromTimestamp,
       to: toTimestamp,
       resolution,
+      timePeriod: 'custom',
     };
     dispatch({ type: ActionTypes.SetTimePeriod, timePeriod: tp });
   };
@@ -156,7 +158,7 @@ const AppProvider: React.FC<Props> = ({ children }) => {
 
     dispatch({
       type: ActionTypes.SetTimePeriod,
-      timePeriod: { from: fromTimestamp, to: toTimestamp, resolution },
+      timePeriod: { from: fromTimestamp, to: toTimestamp, resolution, timePeriod: tp },
     });
   };
 
@@ -175,8 +177,6 @@ const AppProvider: React.FC<Props> = ({ children }) => {
     </AppContext.Provider>
   );
 };
-
-
 
 export const useGlobalContext = () => useContext(AppContext);
 

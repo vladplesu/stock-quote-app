@@ -20,9 +20,21 @@ const useStyles = makeStyles((theme) => ({
     maxWidth: '400px',
     margin: `0 ${theme.spacing(2)}px`,
   },
+  active: {
+    backgroundColor: theme.palette.primary.main,
+    color: theme.palette.common.white,
+    borderTopLeftRadius: 0,
+    borderBottomLeftRadius: 0,
+    borderTopRightRadius: '4px',
+    borderBottomRightRadius: '4px',
+  },
 }));
 
-const CustomTimePeriod = () => {
+type Props = {
+  active: boolean;
+};
+
+const CustomTimePeriod: React.FC<Props> = ({ active }) => {
   const [open, setOpen] = useState(false);
   const [fromDate, setFromDate] = useState<string>('');
   const [toDate, setToDate] = useState<string>('');
@@ -70,7 +82,11 @@ const CustomTimePeriod = () => {
 
   return (
     <>
-      <IconButton onClick={() => setOpen(!open)}>
+      <IconButton
+        onClick={() => setOpen(!open)}
+        size="small"
+        className={active ? classes.active : ''}
+      >
         <DateRangeIcon />
       </IconButton>
       <Modal open={open} onClose={() => setOpen(false)} className={classes.modal}>
