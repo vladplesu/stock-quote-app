@@ -1,7 +1,8 @@
 import React from 'react';
-import { Box, Button, Typography } from '@material-ui/core';
+import { Box, Button, Divider, Typography } from '@material-ui/core';
 import ParentSize from '@visx/responsive/lib/components/ParentSizeModern';
 import PriceChart from '../components/PriceChart';
+import CompanyProfile from '../components/CompanyProfile';
 import { useGlobalContext } from '../context';
 
 type Props = {
@@ -31,8 +32,12 @@ const ChartFragment: React.FC<Props> = ({ handleBtnClick }) => {
   }
 
   return (
-    <Box padding={2} textAlign="left">
-      <ParentSize>{({ width }) => <PriceChart width={width} height={350} />}</ParentSize>
+    <Box padding={2} paddingBottom={0} textAlign="left">
+      <ParentSize className="parent">
+        {({ width }) => <PriceChart width={width} height={350} />}
+      </ParentSize>
+      <Divider />
+      <CompanyProfile />
     </Box>
   );
 };

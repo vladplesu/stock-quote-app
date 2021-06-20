@@ -64,9 +64,24 @@ const AppProvider: React.FC<Props> = ({ children }) => {
           return res.json();
         })
         .then((data) => {
+          const companyProfile = {
+            country: data.country,
+            ipo: data.ipo,
+            marketCapitalization: data.marketCapitalization,
+            name: data.name,
+            shareOutstanding: data.shareOutstanding,
+            weburl: data.weburl,
+            logo: data.logo,
+            finnhubIndustry: data.finnhubIndustry,
+          };
           dispatch({
             type: ActionTypes.Add,
-            stockSymbol: { ...stockSymbol, exchange: data.exchange, currency: data.currency },
+            stockSymbol: {
+              ...stockSymbol,
+              exchange: data.exchange,
+              currency: data.currency,
+              companyProfile,
+            },
           });
         })
         .catch((err) => {

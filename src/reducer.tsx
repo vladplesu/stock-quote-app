@@ -5,6 +5,15 @@ interface StockSymbol {
   description: string;
   currency?: string;
   exchange?: string;
+  companyProfile?: {
+    country: string;
+    marketCapitalization: number;
+    name: string;
+    shareOutstanding: number;
+    weburl: string;
+    logo: string;
+    finnhubIndustry: string;
+  };
 }
 
 interface TimeData {

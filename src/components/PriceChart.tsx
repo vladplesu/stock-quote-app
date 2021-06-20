@@ -124,7 +124,7 @@ export default withTooltip<AreaProps, ToolTipData>(
               stockData.push({ date, close: closePrices[i] });
             }
           }
-          if (resolution !== 'D' && resolution !== 'W')  {
+          if (resolution !== 'D' && resolution !== 'W') {
             stockData = stockData.filter(
               (d) => d.date.getUTCHours() >= 13 && d.date.getUTCHours() < 20
             );
@@ -141,24 +141,20 @@ export default withTooltip<AreaProps, ToolTipData>(
       [priceData]
     );
 
-
     // scales
-    const dateScale = useMemo(
-      () => {
-        const { resolution } = timePeriod;
-        let discontinuityProvider = discontinuitySkipWeekends()
-        if (resolution !== 'D' && resolution !== 'W') {
-          discontinuityProvider = discontinuityRange(...discontinuities);
-        }
-        return scaleDiscontinuous(
-          scaleTime({
-            range: [margin.left, innerWidth + margin.left],
-            domain: [min(priceData, getDate) || 0, max(priceData, getDate) || 0],
-          })
-        ).discontinuityProvider(discontinuityProvider);
-      }        ,
-      [discontinuities, innerWidth, margin.left, priceData, timePeriod]
-    );
+    const dateScale = useMemo(() => {
+      const { resolution } = timePeriod;
+      let discontinuityProvider = discontinuitySkipWeekends();
+      if (resolution !== 'D' && resolution !== 'W') {
+        discontinuityProvider = discontinuityRange(...discontinuities);
+      }
+      return scaleDiscontinuous(
+        scaleTime({
+          range: [margin.left, innerWidth + margin.left],
+          domain: [min(priceData, getDate) || 0, max(priceData, getDate) || 0],
+        })
+      ).discontinuityProvider(discontinuityProvider);
+    }, [discontinuities, innerWidth, margin.left, priceData, timePeriod]);
 
     const stockValueScale = useMemo(
       () =>
@@ -223,8 +219,8 @@ export default withTooltip<AreaProps, ToolTipData>(
             scale={stockValueScale}
             width={innerWidth}
             strokeDasharray="1,3"
-            stroke={accentColor}
-            strokeOpacity={0.2}
+            stroke="#000"
+            strokeOpacity={0.3}
             pointerEvents="none"
             numTicks={6}
           />
@@ -233,8 +229,8 @@ export default withTooltip<AreaProps, ToolTipData>(
             scale={dateScale}
             height={innerHeight}
             strokeDasharray="1,3"
-            stroke={accentColor}
-            strokeOpacity={0.2}
+            stroke="#000"
+            strokeOpacity={0.3}
             pointerEvents="none"
             numTicks={6}
           />
