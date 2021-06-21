@@ -12,14 +12,9 @@ import { Alert } from '@material-ui/lab/';
 import { useTheme } from '@material-ui/core/styles';
 import ParentSize from '@visx/responsive/lib/components/ParentSizeModern';
 import { debounce } from 'lodash';
-import PriceChart from '../components/PriceChart';
+import PriceChart, { Stock } from '../components/PriceChart';
 import CompanyProfile from '../components/CompanyProfile';
 import { useGlobalContext } from '../context';
-
-interface Stock {
-  date: Date;
-  close: number;
-}
 
 type Props = {
   handleBtnClick: () => void;

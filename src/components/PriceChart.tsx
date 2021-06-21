@@ -18,7 +18,7 @@ import CustomTimePeriod from './CustomTimePeriod';
 import MovingAverage from './MovingAverage';
 import { useGlobalContext, TimePeriods } from '../context';
 
-interface Stock {
+export interface Stock {
   date: Date;
   close: number;
 }
