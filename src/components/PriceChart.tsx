@@ -8,7 +8,7 @@ import { scaleTime, scaleLinear } from '@visx/scale';
 import { AreaClosed, Bar, Line, LinePath } from '@visx/shape';
 import { withTooltip, TooltipWithBounds } from '@visx/tooltip';
 import { WithTooltipProvidedProps } from '@visx/tooltip/lib/enhancers/withTooltip';
-import { max, bisector, min, pairs, extent, ticks } from 'd3-array';
+import { max, bisector, min, extent, ticks } from 'd3-array';
 import { format } from 'd3-format';
 import { timeFormat } from 'd3-time-format';
 import { first, last } from 'lodash';
@@ -43,22 +43,6 @@ const getDate = (d: Stock) => d.date;
 const getTime = (d: Stock) => d.date.getTime();
 const getStockValue = (d: Stock) => d.close;
 const bisectDate = bisector<Stock, Date>((d) => d.date).left;
-const tradingHours = (dates: Date[]) => {
-  const getDateKey = (date: Date) =>
-    `${date.getUTCMonth()}-${date.getUTCDate()}-${date.getUTCFullYear()}`;
-
-  const thrs = dates.reduce((acc: { [key: string]: [Date, Date] }, curr: Date) => {
-    const dateKey = getDateKey(curr);
-    if (!Object.prototype.hasOwnProperty.call(acc, dateKey)) {
-      acc[dateKey] = [curr, curr];
-    } else {
-      acc[dateKey][1] = curr;
-    }
-    return acc;
-  }, {});
-
-  return Object.keys(thrs).map((d) => thrs[d]);
-};
 
 export type AreaProps = {
   width: number;

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Grid, useMediaQuery } from '@material-ui/core';
+import { Box, Grid, Modal, useMediaQuery } from '@material-ui/core';
 import { useTheme } from '@material-ui/core/styles';
 import ChartFragment from './containers/ChartFragment';
 import Header from './components/Header';
@@ -17,7 +17,6 @@ function App() {
     <div className="App">
       <Box height="100%" display="flex" flexDirection="column">
         <Header handleClick={() => setShowSearch(!showSearch)} />
-        {showSearch && <SearchFragment handleClick={() => setShowSearch(!showSearch)} />}
         <Grid className="chart-container" container>
           <Grid item xs={12} sm={8} md={9} lg={10}>
             <ChartFragment handleBtnClick={() => setShowSearch(!showSearch)} />
@@ -29,6 +28,9 @@ function App() {
           )}
         </Grid>
       </Box>
+      <Modal className="search-modal" open={showSearch} onClose={() => setShowSearch(!showSearch)}>
+        <SearchFragment handleClick={() => setShowSearch(!showSearch)} />
+      </Modal>
     </div>
   );
 }

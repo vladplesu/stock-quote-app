@@ -13,6 +13,17 @@ type Props = {
 };
 
 const useStyles = makeStyles((theme) => ({
+  root: {
+    backgroundColor: '#fff',
+    overflowY: 'auto',
+    borderRadius: '4px',
+    height: '100%',
+    width: '100%',
+    [theme.breakpoints.up('sm')]: {
+      width: '800px',
+      height: '600px',
+    },
+  },
   search: {
     position: 'relative',
     borderRadius: theme.shape.borderRadius,
@@ -82,7 +93,7 @@ const SearchFragment: React.FC<Props> = ({ handleClick }) => {
   );
 
   return (
-    <Box zIndex={999} position="absolute" left={0} right={0} top={0} bottom={0} bgcolor="white">
+    <Box className={classes.root}>
       <Box
         display="flex"
         paddingLeft={2}
