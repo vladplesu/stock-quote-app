@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { LinePath } from '@visx/shape';
-import { curveLinear } from '@visx/curve';
+import { curveBasis } from '@visx/curve';
 import { scaleLinear, scaleTime } from '@visx/scale';
 import { extent, max, min } from 'd3-array';
 
@@ -54,7 +54,7 @@ const MovingAverage: React.FC<Props> = ({ lineData, timeRange, linearRange }) =>
   return (
     <>
       <LinePath<AverageData>
-        curve={curveLinear}
+        curve={curveBasis}
         data={maData}
         stroke="red"
         strokeWidth={2}

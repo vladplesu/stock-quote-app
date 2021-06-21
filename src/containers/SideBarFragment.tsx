@@ -15,6 +15,7 @@ import AddIcon from '@material-ui/icons/Add';
 import DeleteIcon from '@material-ui/icons/Delete';
 import { makeStyles } from '@material-ui/core/styles';
 import { useGlobalContext } from '../context';
+import CompanyProfile from '../components/CompanyProfile';
 
 const { REACT_APP_FIN_URL: URL, REACT_APP_FIN_KEY: KEY } = process.env;
 const QUOTE_URL = `${URL}/quote?token=${KEY}`;
@@ -53,44 +54,55 @@ const SideBarFragment: React.FC<Props> = ({ handleAddBtn }) => {
 
   return (
     <>
-      <Box borderLeft={3} borderColor="rgba(0, 0, 0, 0.2)" height="100%">
+      <Box
+        borderLeft={3}
+        borderColor="rgba(0, 0, 0, 0.2)"
+        height="100%"
+        display="flex"
+        flexDirection="column"
+      >
         <Box display="flex" justifyContent="space-between" alignItems="center" padding={1}>
           <Typography>Favorites</Typography>
           <IconButton size="small" color="secondary" onClick={handleAddBtn}>
             <AddIcon />
           </IconButton>
         </Box>
-        <TableContainer>
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell>Symbol</TableCell>
-                <TableCell align="right">Industry</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {userSymbols.map((symbol) => (
-                <TableRow
-                  key={symbol.symbol}
-                  className={classes.tableRow}
-                  onClick={() => selectSymbol(symbol)}
-                >
-                  <TableCell>{symbol.symbol}</TableCell>
-                  <TableCell align="right">
-                    {symbol.companyProfile?.finnhubIndustry}
-                    <Button
-                      className={classes.removeBtn}
-                      color="secondary"
-                      onClick={() => removeSymbol(symbol.symbol)}
-                    >
-                      <DeleteIcon />
-                    </Button>
-                  </TableCell>
+        <Box display="flex" flexDirection="column" flexGrow={1}>
+          <TableContainer style={{ height: '50%' }}>
+            <Table size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell>Symbol</TableCell>
+                  <TableCell align="right">Industry</TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+              </TableHead>
+              <TableBody>
+                {userSymbols.map((symbol) => (
+                  <TableRow
+                    key={symbol.symbol}
+                    className={classes.tableRow}
+                    onClick={() => selectSymbol(symbol)}
+                  >
+                    <TableCell>{symbol.symbol}</TableCell>
+                    <TableCell align="right">
+                      {symbol.companyProfile?.finnhubIndustry}
+                      <Button
+                        className={classes.removeBtn}
+                        color="secondary"
+                        onClick={() => removeSymbol(symbol.symbol)}
+                      >
+                        <DeleteIcon />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+          <Box borderTop={3} borderColor="rgba(0, 0, 0, 0.2)" paddingLeft={2} paddingRight={2}>
+            <CompanyProfile />
+          </Box>
+        </Box>
       </Box>
     </>
   );

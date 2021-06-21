@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { AxisRight, AxisBottom } from '@visx/axis';
 import { curveLinear } from '@visx/curve';
 import { localPoint } from '@visx/event';
@@ -8,23 +8,15 @@ import { scaleTime, scaleLinear } from '@visx/scale';
 import { AreaClosed, Bar, Line, LinePath } from '@visx/shape';
 import { withTooltip, TooltipWithBounds } from '@visx/tooltip';
 import { WithTooltipProvidedProps } from '@visx/tooltip/lib/enhancers/withTooltip';
-import { max, bisector, min, pairs } from 'd3-array';
+import { max, bisector, min, pairs, extent, ticks } from 'd3-array';
 import { format } from 'd3-format';
 import { timeFormat } from 'd3-time-format';
-import {
-  scaleDiscontinuous,
-  discontinuitySkipWeekends,
-  discontinuityRange,
-} from '@d3fc/d3fc-discontinuous-scale';
 import { first, last } from 'lodash';
 import { Button, ButtonGroup } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import CustomTimePeriod from './CustomTimePeriod';
 import MovingAverage from './MovingAverage';
 import { useGlobalContext, TimePeriods } from '../context';
-
-const { REACT_APP_FIN_URL: URL, REACT_APP_FIN_KEY: KEY } = process.env;
-const QUOTE_URL = `${URL}/stock/candle?token=${KEY}`;
 
 interface Stock {
   date: Date;
@@ -34,7 +26,7 @@ interface Stock {
 type ToolTipData = Stock;
 
 // styles
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles(() => ({
   maBtn: {
     position: 'absolute',
     left: 0,
@@ -48,6 +40,7 @@ const formatStockValue = format('.2f');
 
 // accessors
 const getDate = (d: Stock) => d.date;
+const getTime = (d: Stock) => d.date.getTime();
 const getStockValue = (d: Stock) => d.close;
 const bisectDate = bisector<Stock, Date>((d) => d.date).left;
 const tradingHours = (dates: Date[]) => {
@@ -70,6 +63,7 @@ const tradingHours = (dates: Date[]) => {
 export type AreaProps = {
   width: number;
   height: number;
+  priceData: Stock[];
   margin?: { top: number; right: number; bottom: number; left: number };
 };
 
@@ -77,6 +71,7 @@ export default withTooltip<AreaProps, ToolTipData>(
   ({
     width,
     height,
+    priceData,
     margin = { top: 10, right: 45, bottom: 30, left: 0 },
     showTooltip,
     hideTooltip,
@@ -90,9 +85,7 @@ export default withTooltip<AreaProps, ToolTipData>(
 
     if (!selectedSymbol) return null;
 
-    const [priceData, setPriceData] = useState<Stock[]>([]);
     const [showMavg, setShowMavg] = useState(false);
-    const [loading, setLoading] = useState(true);
 
     const classes = useStyles();
 
@@ -100,61 +93,19 @@ export default withTooltip<AreaProps, ToolTipData>(
     const innerWidth = width - margin.left - margin.right;
     const innerHeight = height - margin.top - margin.bottom;
 
-    useEffect(() => {
-      const { resolution, from, to } = timePeriod;
-      fetch(
-        `${QUOTE_URL}&symbol=${selectedSymbol.symbol}&resolution=${resolution}&from=${from}&to=${to}`
-      )
-        .then((res) => {
-          if (!res.ok) {
-            throw new Error('Could not fetch price data');
-          }
-          return res.json();
-        })
-        .then((data) => {
-          if (data.s !== 'ok') {
-            throw new Error('Could not fetch price data');
-          }
+    const rowTickValues = useMemo(() => (ticks(min(priceData, getStockValue) || 0, max(priceData, getStockValue) || 10, 10)), [priceData]);
 
-          const { c: closePrices, t: timeStamps } = data;
-          let stockData: Stock[] = [];
-          if (closePrices && timeStamps) {
-            for (let i = 0; i < closePrices.length; i++) {
-              const date = new Date(timeStamps[i] * 1000);
-              stockData.push({ date, close: closePrices[i] });
-            }
-          }
-          if (resolution !== 'D' && resolution !== 'W') {
-            stockData = stockData.filter(
-              (d) => d.date.getUTCHours() >= 13 && d.date.getUTCHours() < 20
-            );
-          }
-          setPriceData(stockData);
-          setLoading(false);
-        })
-
-        .catch((err) => console.log(err));
-    }, [selectedSymbol, timePeriod]);
-
-    const discontinuities = useMemo(
-      () => pairs(tradingHours(priceData.map(({ date }) => date))).map((d) => [d[0][1], d[1][0]]),
-      [priceData]
-    );
+    const columnTickValues = useMemo(() => (ticks(min(priceData, getTime) || 0, max(priceData, getTime) || 0, 10)), [priceData])
 
     // scales
-    const dateScale = useMemo(() => {
-      const { resolution } = timePeriod;
-      let discontinuityProvider = discontinuitySkipWeekends();
-      if (resolution !== 'D' && resolution !== 'W') {
-        discontinuityProvider = discontinuityRange(...discontinuities);
-      }
-      return scaleDiscontinuous(
+    const dateScale = useMemo(
+      () =>
         scaleTime({
           range: [margin.left, innerWidth + margin.left],
-          domain: [min(priceData, getDate) || 0, max(priceData, getDate) || 0],
-        })
-      ).discontinuityProvider(discontinuityProvider);
-    }, [discontinuities, innerWidth, margin.left, priceData, timePeriod]);
+          domain: extent(priceData, getDate) as [Date, Date],
+        }),
+      [innerWidth, margin.left, priceData]
+    );
 
     const stockValueScale = useMemo(
       () =>
@@ -199,10 +150,6 @@ export default withTooltip<AreaProps, ToolTipData>(
       [showTooltip, dateScale, stockValueScale, priceData]
     );
 
-    if (loading) {
-      return <div>Loading</div>;
-    }
-
     return (
       <div>
         <svg width={width} height={height}>
@@ -222,7 +169,7 @@ export default withTooltip<AreaProps, ToolTipData>(
             stroke="#000"
             strokeOpacity={0.3}
             pointerEvents="none"
-            numTicks={6}
+            tickValues={rowTickValues}
           />
           <GridColumns
             top={margin.top}
@@ -232,16 +179,16 @@ export default withTooltip<AreaProps, ToolTipData>(
             stroke="#000"
             strokeOpacity={0.3}
             pointerEvents="none"
-            numTicks={6}
+            tickValues={columnTickValues}
           />
           <AxisRight
             scale={stockValueScale}
             left={innerWidth + margin.left}
             tickFormat={formatStockValue}
             tickLength={4}
-            numTicks={6}
+            tickValues={rowTickValues}
           />
-          <AxisBottom scale={dateScale} top={height - margin.bottom} numTicks={6} />
+          <AxisBottom scale={dateScale} top={height - margin.bottom} />
           <AreaClosed<Stock>
             data={priceData}
             x={(d) => dateScale(getDate(d)) ?? 0}
