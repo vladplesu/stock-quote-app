@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import {
   Box,
   Button,
@@ -16,9 +16,6 @@ import DeleteIcon from '@material-ui/icons/Delete';
 import { makeStyles } from '@material-ui/core/styles';
 import { useGlobalContext } from '../context';
 import CompanyProfile from '../components/CompanyProfile';
-
-const { REACT_APP_FIN_URL: URL, REACT_APP_FIN_KEY: KEY } = process.env;
-const QUOTE_URL = `${URL}/quote?token=${KEY}`;
 
 type Props = {
   handleAddBtn: () => void;
@@ -48,9 +45,11 @@ const SideBarFragment: React.FC<Props> = ({ handleAddBtn }) => {
 
   const classes = useStyles();
 
-  useEffect(() => {
-    fetch(`${QUOTE_URL}&symbol=`);
-  });
+  const handleRemove = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>, symbol: string) => {
+    event.preventDefault();
+    event.stopPropagation();
+    removeSymbol(symbol);
+  };
 
   return (
     <>
@@ -89,7 +88,7 @@ const SideBarFragment: React.FC<Props> = ({ handleAddBtn }) => {
                       <Button
                         className={classes.removeBtn}
                         color="secondary"
-                        onClick={() => removeSymbol(symbol.symbol)}
+                        onClick={(event) => handleRemove(event, symbol.symbol)}
                       >
                         <DeleteIcon />
                       </Button>

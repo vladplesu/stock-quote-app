@@ -54,90 +54,92 @@ const useStyles = makeStyles((theme) => ({
 const { REACT_APP_FIN_URL: URL, REACT_APP_FIN_KEY: KEY } = process.env;
 const SEARCH_URL = `${URL}/search?token=${KEY}`;
 
-const SearchFragment: React.FC<Props> = ({ handleClick }) => {
-  const { userSymbols } = useGlobalContext();
-  const [symbols, setSymbols] = useState<StockSymbol[]>([]);
-  const [error, setError] = useState(null);
+const SearchFragment: React.FC<Props> = React.forwardRef(
+  ({ handleClick }, ref: React.ForwardedRef<HTMLDivElement>) => {
+    const { userSymbols } = useGlobalContext();
+    const [symbols, setSymbols] = useState<StockSymbol[]>([]);
+    const [error, setError] = useState(null);
 
-  const classes = useStyles();
+    const classes = useStyles();
 
-  const debouncedHandleChange = useMemo(
-    () =>
-      debounce((event: React.ChangeEvent<HTMLInputElement>) => {
-        const searchQuery = event.target.value;
-        if (searchQuery === '') {
-          setSymbols([]);
-        } else {
-          fetch(`${SEARCH_URL}&q=${event.target.value}`)
-            .then((res) => {
-              if (!res.ok) {
-                throw new Error('Could not fetch search results.');
-              }
-              return res.json();
-            })
-            .then((data) => {
-              setSymbols(data.result);
-              setError(null);
-            })
-            .catch((err) => setError(err.message));
-        }
-      }, 300),
-    []
-  );
+    const debouncedHandleChange = useMemo(
+      () =>
+        debounce((event: React.ChangeEvent<HTMLInputElement>) => {
+          const searchQuery = event.target.value;
+          if (searchQuery === '') {
+            setSymbols([]);
+          } else {
+            fetch(`${SEARCH_URL}&q=${event.target.value}`)
+              .then((res) => {
+                if (!res.ok) {
+                  throw new Error('Could not fetch search results.');
+                }
+                return res.json();
+              })
+              .then((data) => {
+                setSymbols(data.result);
+                setError(null);
+              })
+              .catch((err) => setError(err.message));
+          }
+        }, 300),
+      []
+    );
 
-  useEffect(
-    () => () => {
-      debouncedHandleChange.cancel();
-    },
-    [debouncedHandleChange]
-  );
+    useEffect(
+      () => () => {
+        debouncedHandleChange.cancel();
+      },
+      [debouncedHandleChange]
+    );
 
-  return (
-    <Box className={classes.root}>
-      <Box
-        display="flex"
-        paddingLeft={2}
-        alignItems="center"
-        justifyContent="space-between"
-        boxShadow={1}
-      >
-        <Typography component="h2" variant="h6">
-          Search Symbols
-        </Typography>
-        <IconButton onClick={handleClick} color="secondary">
-          <CloseIcon />
-        </IconButton>
-      </Box>
-      <div className={classes.search}>
-        <div className={classes.searchIcon}>
-          <SearchIcon />
+    return (
+      <div className={classes.root} ref={ref}>
+        <Box
+          display="flex"
+          paddingLeft={2}
+          alignItems="center"
+          justifyContent="space-between"
+          boxShadow={1}
+        >
+          <Typography component="h2" variant="h6">
+            Search Symbols
+          </Typography>
+          <IconButton onClick={handleClick} color="secondary">
+            <CloseIcon />
+          </IconButton>
+        </Box>
+        <div className={classes.search}>
+          <div className={classes.searchIcon}>
+            <SearchIcon />
+          </div>
+          <InputBase
+            classes={{ root: classes.inputRoot, input: classes.inputInput }}
+            placeholder="Search..."
+            onChange={debouncedHandleChange}
+          />
         </div>
-        <InputBase
-          classes={{ root: classes.inputRoot, input: classes.inputInput }}
-          placeholder="Search..."
-          onChange={debouncedHandleChange}
-        />
+        <List dense>
+          {symbols.length > 0
+            ? symbols.map((s: StockSymbol) => (
+                <div key={s.symbol}>
+                  <StockSymbolItem
+                    stockSymbol={s}
+                    isFavorite={userSymbols.map((sym) => sym.symbol).includes(s.symbol)}
+                    handleSelect={handleClick}
+                  />
+                </div>
+              ))
+            : userSymbols.map((s: StockSymbol) => (
+                <div key={s.symbol}>
+                  <StockSymbolItem stockSymbol={s} isFavorite={true} handleSelect={handleClick} />
+                </div>
+              ))}
+        </List>
+        {error && <Typography>{error}</Typography>}
       </div>
-      <List dense>
-        {symbols.length > 0
-          ? symbols.map((s: StockSymbol) => (
-              <div key={s.symbol}>
-                <StockSymbolItem
-                  stockSymbol={s}
-                  isFavorite={userSymbols.map((sym) => sym.symbol).includes(s.symbol)}
-                  handleSelect={handleClick}
-                />
-              </div>
-            ))
-          : userSymbols.map((s: StockSymbol) => (
-              <div key={s.symbol}>
-                <StockSymbolItem stockSymbol={s} isFavorite={true} handleSelect={handleClick} />
-              </div>
-            ))}
-      </List>
-      {error && <Typography>{error}</Typography>}
-    </Box>
-  );
-};
+    );
+  }
+);
 
 export default SearchFragment;

@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useCallback } from 'react';
+
 import reducer, { StockSymbol, State, ActionTypes, TimeData } from './reducer';
 
 const { useReducer, useContext, createContext } = React;
@@ -43,11 +44,13 @@ const initialState: State = {
   userSymbols: [],
   selectedSymbol: null,
   timePeriod,
+  errorMessage: '',
   addSymbol: () => {},
   removeSymbol: () => {},
   selectSymbol: () => {},
   setTimePeriod: () => {},
   setCustomTimePeriod: () => {},
+  logErrors: () => {},
 };
 
 const AppContext = createContext(initialState);
@@ -86,7 +89,7 @@ const AppProvider: React.FC<Props> = ({ children }) => {
           });
         })
         .catch((err) => {
-          console.log(err);
+          logErrors(err.message);
         });
     } else {
       dispatch({ type: ActionTypes.Add, stockSymbol });
@@ -95,6 +98,9 @@ const AppProvider: React.FC<Props> = ({ children }) => {
 
   const removeSymbol = (symbol: string) => {
     const symbols = state.userSymbols.filter((s) => s.symbol !== symbol);
+    if (symbol === state.selectedSymbol?.symbol) {
+      dispatch({ type: ActionTypes.Select, stockSymbol: undefined });
+    }
     dispatch({ type: ActionTypes.Remove, symbols });
   };
 
@@ -162,6 +168,10 @@ const AppProvider: React.FC<Props> = ({ children }) => {
     });
   };
 
+  const logErrors = useCallback((error: string) => {
+    dispatch({ type: ActionTypes.LogErrors, errorMessage: error });
+  }, []);
+
   return (
     <AppContext.Provider
       value={{
@@ -171,6 +181,7 @@ const AppProvider: React.FC<Props> = ({ children }) => {
         selectSymbol,
         setTimePeriod,
         setCustomTimePeriod,
+        logErrors,
       }}
     >
       {children}
